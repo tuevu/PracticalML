@@ -53,3 +53,7 @@ output <- predict(modFit,testing,type="class")
 testresult <- predict(modFit,newdata = testing)
 confusionMatrix(testresult,testing$classe)
 ```
+
+***
+sss
+***
