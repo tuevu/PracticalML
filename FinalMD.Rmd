@@ -1,0 +1,108 @@
+---
+title: "Practical ML final project"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## GitHub Documents
+
+This is an R Markdown format used for publishing markdown documents to GitHub. When you click the **Knit** button all R code chunks are run and a markdown file (.md) suitable for publishing to GitHub is generated.
+
+## Including Code
+
+Remove existing memory and load packages:
+
+```{r}
+rm(list=ls())
+#install.packages("caret")
+library(caret)
+```
+
+Read input data and preset **NUL*L* and **NA** values to **NA**
+
+```{r}
+datain <- read.csv(file='https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv',
+                     na.strings=c("","NA"))
+validation  <- read.csv(file='https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv',
+                     na.strings=c("","NA"))
+dim(datain)
+dim(validation)
+```
+
+There are many blank and NA values. The first step is to eliminate these data to have a clean set of input
+The first 7 columns are eliminated as these are personal data without having using equipment.
+The last column (160) is the **classe** data (predicted variable)
+I eliminate blank and NA values from column 8-159 only
+
+```{r}
+colnan=NULL
+for (i in 8:159){
+  p1 <- sum(is.na(datain[,i])==TRUE)/dim(datain)[1]*100
+  if (p1>95){colnan=c(colnan,i)}
+}
+colnan <- c(1:7,colnan)
+#New data
+  newdata  <- datain[,-colnan]
+  newvalid <- validation[,-colnan]
+  names(newdata)
+```
+
+Define new training and new testing data based on the newly created data set
+
+```{r}
+inTrain  <- createDataPartition(y=newdata$classe,p=0.7,list=FALSE)
+  
+training <- newdata[inTrain,]
+testing  <- newdata[-inTrain,]
+dim(training)
+dim(testing)
+```
+## Fit with Regressive Partitioning and Regression trees (rpart package)
+```{r}
+#install.packages("rpart")
+library(rpart)
+set.seed(5282)
+modFit <- rpart(classe~.,data=training,method="class")
+```
+Apply to testing set:
+```{r}
+output <- predict(modFit,newdata=testing,type="class")
+```
+Quantify the output with testing data
+```{r}
+length(output)
+length(testing$classe)
+confusionMatrix(output,testing$classe)
+```
+Plotting result
+```{r}
+library(rattle)
+fancyRpartPlot(modFit)
+```
+The results from rpart model has acceptable accuracy at 0.73 with small p_value. However, I will try using another method introduced in the class, which is better for this kind of problem, the method is **random forest**
+
+##Application of Random Forest
+Here I apply the randomforest packages as in my experiment with **caret** package, the randomforest function took much longer computation time.
+```{r}
+#install.packages("randomForest")
+library(randomForest)
+set.seed(5282)
+modFitRf <- randomForest(classe~., method="class",data=training)
+```
+Get the output for testing set
+
+```{r}
+outputRf <- predict(modFitRf,newdata = testing,type="class")
+confusionMatrix(outputRf,testing$classe)
+```
+
+Obviously the Random Forest approach performs better than rpart. It has higher accuracy ~0.99 (with small p_value).
+I will go ahead and predict the validation data with random forest approach
+##Validation data
+```{r}
+dim(newvalid)
+outputValid <- predict(modFitRf,newdata=newvalid[,-53],type="class")
+outputValid
