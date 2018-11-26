@@ -17,7 +17,7 @@ The variable “classes” is the predicted variables and consists of 5 classes:
 - throwing the hips to the front (Class E)
 
 **Steps**
--	The first 6 variables are taken off from the list of predictor (which are X, username, raw time step and date, numwindow)
+-	The first 7 variables are taken off from the list of predictor (which are X, username, raw time step and date, numwindow)
 -	All The predictors consisting of blank and NA values are taken off due to not enough values using 95% threshold
 -	The newtraining and newtesting are created with 52 predictors and 1 predicted variables (**classe**)
 -	The cross validation in this study is by random sampling
